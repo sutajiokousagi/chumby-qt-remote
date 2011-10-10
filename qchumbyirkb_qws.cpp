@@ -62,9 +62,6 @@ public:
     QWSChumbyIrKbPrivate(QWSChumbyIrKbHandler *, const QString &);
     ~QWSChumbyIrKbPrivate();
 
-private:
-    void switchLed(int, bool);
-
 private Q_SLOTS:
     void readKeycode();
 
@@ -138,17 +135,6 @@ QWSChumbyIrKbPrivate::~QWSChumbyIrKbPrivate()
         QT_CLOSE(m_fd);
 }
 
-void QWSChumbyIrKbPrivate::switchLed(int led, bool state)
-{
-    struct ::input_event led_ie;
-    ::gettimeofday(&led_ie.time, 0);
-    led_ie.type = EV_LED;
-    led_ie.code = led;
-    led_ie.value = state;
-
-    QT_WRITE(m_fd, &led_ie, sizeof(led_ie));
-}
-
 void QWSChumbyIrKbPrivate::readKeycode()
 {
     struct ::input_event buffer[32];
@@ -185,27 +171,6 @@ void QWSChumbyIrKbPrivate::readKeycode()
 
         QWSKeyboardHandler::KeycodeAction ka;
         ka = m_handler->processKeycode(code, value != 0, value == 2);
-
-        switch (ka) {
-        case QWSKeyboardHandler::CapsLockOn:
-        case QWSKeyboardHandler::CapsLockOff:
-            switchLed(LED_CAPSL, ka == QWSKeyboardHandler::CapsLockOn);
-            break;
-
-        case QWSKeyboardHandler::NumLockOn:
-        case QWSKeyboardHandler::NumLockOff:
-            switchLed(LED_NUML, ka == QWSKeyboardHandler::NumLockOn);
-            break;
-
-        case QWSKeyboardHandler::ScrollLockOn:
-        case QWSKeyboardHandler::ScrollLockOff:
-            switchLed(LED_SCROLLL, ka == QWSKeyboardHandler::ScrollLockOn);
-            break;
-
-        default:
-            // ignore console switching and reboot
-            break;
-        }
     }
 }
 
